@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stratified Block Randomiser</title>
+<style>
+:root{--bg:#f4f5f9;--card:#fff;--ink:#14162b;--mute:#6a6f87;--line:#e3e6ee;--acc:#2a2a6b;--accf:#fff;--accs:#eef0fc;--ok:#e9f7ef;--okt:#17623a;--bad:#fdeeee;--badt:#9b1c1c;--g0:#2a2a6b;--g1:#b4541a;--g2:#1b7a6b;--g3:#7a2b82;--sh:0 1px 2px rgba(20,22,43,.05),0 6px 20px rgba(20,22,43,.05);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0f16;--card:#171a24;--ink:#e8eaf3;--mute:#9a9fb8;--line:#272c3d;--acc:#8f92f0;--accf:#10112a;--accs:#212544;--ok:#12261b;--okt:#7fd6a0;--bad:#2b1517;--badt:#f3a3a3;--g0:#8f92f0;--g1:#f0a070;--g2:#6fd3c1;--g3:#d89be0;--sh:none}}
+:root[data-theme="dark"]{--bg:#0d0f16;--card:#171a24;--ink:#e8eaf3;--mute:#9a9fb8;--line:#272c3d;--acc:#8f92f0;--accf:#10112a;--accs:#212544;--ok:#12261b;--okt:#7fd6a0;--bad:#2b1517;--badt:#f3a3a3;--g0:#8f92f0;--g1:#f0a070;--g2:#6fd3c1;--g3:#d89be0;--sh:none}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Inter",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .in{max-width:920px;margin:0 auto;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:10px}.brand b{display:block;line-height:1.2}.brand small{color:var(--mute);font-size:12px}
+.logo{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--accs);font-size:18px}
+main{max-width:920px;margin:0 auto;padding:28px 20px 72px}
+h1{font-size:28px;letter-spacing:-.02em;margin:0 0 4px}
+h2{font-size:16px;letter-spacing:-.01em;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+p.sub{color:var(--mute);margin:0 0 24px}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:var(--sh)}
+section>.mute:first-of-type,section>h2+.mute{margin:0 0 14px}
+.row{display:flex;gap:10px;align-items:center;margin:10px 0;flex-wrap:wrap}
+.row>input[type=text],.row>select{flex:1;min-width:140px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 12px;transition:border-color .15s,box-shadow .15s}
+input:hover,select:hover,textarea:hover{border-color:color-mix(in srgb,var(--acc) 35%,var(--line))}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+input[type=number]{width:84px}
+input[type=checkbox],input[type=radio]{accent-color:var(--acc);width:16px;height:16px;padding:0}
+button{font:inherit;font-weight:500;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:9px 16px;transition:background .15s,transform .05s,box-shadow .15s}
+button:hover{background:var(--accs)}button:active{transform:translateY(1px)}
+button.p{background:var(--acc);color:var(--accf);border-color:var(--acc);font-weight:600;box-shadow:0 2px 8px color-mix(in srgb,var(--acc) 30%,transparent)}
+button.p:hover{filter:brightness(1.12);background:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button:disabled,input:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.mute{color:var(--mute);font-size:13px}
+.note{border-radius:10px;padding:11px 14px;font-size:14px;margin:12px 0;border:1px solid var(--line);background:var(--bg)}
+.ok{background:var(--ok);color:var(--okt);border-color:transparent}.bad{background:var(--bad);color:var(--badt);border-color:transparent}
+.tag{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:3px 12px;font-size:13px;margin:3px 4px 3px 0}
+.tag button{border:0;background:none;padding:0 2px;color:var(--mute);border-radius:99px}.tag button:hover{color:var(--badt);background:none}
+code{font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.mcard{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:start;border:1.5px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;font-weight:600;transition:border-color .15s,background .15s}
+.mcard:hover{border-color:color-mix(in srgb,var(--acc) 40%,var(--line))}
+.mcard:has(input:checked){border-color:var(--acc);background:var(--accs)}
+.mcard input{margin-top:3px}.mcard .mute{grid-column:2;font-weight:400;display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.col{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--bg);min-height:110px}
+.col b{font-size:15px}
+.chip{display:inline-block;border-radius:8px;padding:3px 10px;margin:3px 4px 3px 0;font-size:13px;border:1px solid var(--line);background:var(--card)}
+.empty{border:1.5px dashed var(--line);border-radius:10px;padding:22px 10px;text-align:center;color:var(--mute);font-size:13px;margin:10px 0 0}
+.bar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--line);margin:12px 0 16px;gap:2px}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);font-weight:600}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}tbody tr:hover{background:var(--bg)}
+textarea{width:100%;height:150px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.hd{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+@media (max-width:560px){main{padding:20px 14px 60px}section{padding:16px}h1{font-size:24px}}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<header class="top"><div class="in"><div class="brand"><span class="logo">🎲</span><div><b>Randomiser</b><small>Seeded, reproducible allocation</small></div></div><button id="reset">Reset study</button></div></header>
+<main>
+<h1>Randomisation</h1><p class="sub">Simple, permuted-block or cluster allocation, with seeded, reproducible allocation.</p>
+<div id="app"></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const newSeed=()=>Array.from(crypto.getRandomValues(new Uint8Array(8)),b=>b.toString(16).padStart(2,'0')).join('');
+const fresh=()=>({factors:[],seed:newSeed(),groups:[{name:'Control',ratio:1},{name:'Intervention',ratio:1}],method:'block',clusters:[],carm:{},blocks:[4],blinding:false,unblind:false,assigned:[],log:[],strata:{},rows:[{id:'',lv:{}}],msg:null,exp:null,chain:null});
+let S=fresh();
+try{const t=localStorage.getItem('sbr');if(t)S=Object.assign(fresh(),JSON.parse(t))}catch(e){}
+const save=()=>{try{localStorage.setItem('sbr',JSON.stringify(S))}catch(e){}};
+const locked=()=>S.assigned.length>0||Object.keys(S.carm).length>0;
+
+// seeded RNG
+function xmur(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}
+return()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return(h^=h>>>16)>>>0}}
+function rng(str){let a=xmur(str)();return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+const sumR=()=>S.groups.reduce((a,g)=>a+g.ratio,0);
+const validBlocks=()=>S.blocks.filter(b=>b%sumR()===0);
+const strataKey=lv=>S.factors.length?S.factors.map(f=>lv[f.name]).join(' / '):'All participants';
+function makeBlock(key){
+  const st=S.strata[key]||(S.strata[key]={idx:0,q:[]});
+  const idx=st.idx++,r=rng(S.seed+'|'+key+'|'+idx),vb=validBlocks();
+  const size=vb[Math.floor(r()*vb.length)],per=size/sumR(),a=[];
+  S.groups.forEach((g,i)=>{for(let k=0;k<per*g.ratio;k++)a.push(i)});
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+  st.q=a;st.size=size;st.cur=idx;return st;
+}
+const label=i=>S.blinding&&!S.unblind?'Group '+String.fromCharCode(65+i):S.groups[i].name;
+const gcol=i=>'var(--g'+(i%4)+')';
+
+async function randomize(){
+  S.msg=null;
+  if(S.groups.length<2)return fail('Add at least two groups.');
+  if(S.method==='cluster'&&!S.clusters.length)return fail('Add at least one cluster before randomising.');
+  if(S.method==='block'&&!validBlocks().length)return fail('No block size is a multiple of the ratio total ('+sumR()+'). Add one that is.');
+  const rows=S.rows.filter(r=>r.id.trim()||S.factors.some(f=>r.lv[f.name]));
+  if(!rows.length)return fail('Enter at least one participant ID.');
+  const ids=new Set(S.assigned.map(a=>a.id));
+  for(const r of rows){
+    const id=r.id.trim();
+    if(!id)return fail('Every row needs a participant ID.');
+    if(ids.has(id))return fail('ID "'+id+'" is already randomised or repeated.');
+    if(S.method==='cluster'&&!S.clusters.includes(r.lv.__cl))return fail('Choose a cluster for '+id+'.');
+    for(const f of (S.method==='cluster'?[]:S.factors))if(!r.lv[f.name])return fail('Choose a '+f.name+' level for '+id+'.');
+    ids.add(id);
+  }
+  for(const r of rows){
+    const id=r.id.trim(),key=strataKey(r.lv);
+    if(S.method==='cluster'){
+      const c=r.lv.__cl;
+      if(S.carm[c]===undefined)await drawCluster(c);
+      const g2=S.carm[c];
+      S.assigned.push({id,group:g2,stratum:c,levels:{},block:'',blockSize:'',seed:S.seed});
+      
+      continue;
+    }
+    let gi,bl='',bs='';
+    if(S.method==='simple'){
+      const st=S.strata[key]||(S.strata[key]={idx:0,q:[]});st.n=(st.n||0)+1;
+      let x=rng(S.seed+'|'+key+'|s|'+st.n)()*sumR();gi=0;
+      while(gi<S.groups.length-1&&x>=S.groups[gi].ratio){x-=S.groups[gi].ratio;gi++}
+    }else{
+      let st=S.strata[key];if(!st||!st.q.length)st=makeBlock(key);
+      gi=st.q.shift();bl=st.cur+1;bs=st.size;
+    }
+    const a={id,group:gi,stratum:key,levels:{...r.lv},block:bl,blockSize:bs,seed:S.seed};
+    S.assigned.push(a);
+    
+  }
+  S.rows=[{id:'',lv:{}}];S.msg={ok:true,t:rows.length+' participant'+(rows.length>1?'s':'')+' randomised.'};
+  save();render();
+}
+function addIds(list){
+  const have=new Set(S.rows.map(r=>r.id.trim()).concat(S.assigned.map(a=>a.id)));
+  const ids=[...new Set(list.map(x=>x.trim().replace(/^"|"$/g,'')).filter(Boolean))].filter(x=>!have.has(x));
+  const skipped=list.filter(x=>x.trim()).length-ids.length;
+  if(S.rows.length&&!S.rows[S.rows.length-1].id.trim())S.rows.pop();
+  const cl=S.method==='cluster'&&$('#bcl')?$('#bcl').value:'';
+  ids.forEach(id=>S.rows.push({id,lv:cl?{__cl:cl}:{}}));
+  if(!S.rows.length)S.rows=[{id:'',lv:{}}];
+  S.msg={ok:ids.length>0,t:ids.length+' ID'+(ids.length==1?'':'s')+' added'+(skipped>0?', '+skipped+' skipped as duplicates or blank':'')+'.'+((S.factors.length||S.method==='cluster')&&ids.length?(S.method==='cluster'?' Choose a cluster for each ID before randomising.':' Choose a level for each factor before randomising.'):'')};
+  save();render();
+}
+const CLTD=(r,i)=>`<td><select data-rl="${i}|__cl"><option value="">Select</option>${S.clusters.map(c=>`<option ${r.lv.__cl===c?'selected':''}>${esc(c)}</option>`).join('')}</select></td>`;
+const CLSEL=()=>`<select id="bcl" aria-label="Cluster for pasted IDs"><option value="">Cluster for pasted IDs</option>${S.clusters.map(c=>`<option>${esc(c)}</option>`).join('')}</select>`;
+async function drawCluster(c){
+  const key='__clusters',vb=validBlocks();let gi,bl='',bs='';
+  if(vb.length){let st=S.strata[key];if(!st||!st.q.length)st=makeBlock(key);gi=st.q.shift();bl=st.cur+1;bs=st.size}
+  else{const st=S.strata[key]||(S.strata[key]={idx:0,q:[]});st.n=(st.n||0)+1;let x=rng(S.seed+'|'+key+'|s|'+st.n)()*sumR();gi=0;
+    while(gi<S.groups.length-1&&x>=S.groups[gi].ratio){x-=S.groups[gi].ratio;gi++}}
+  S.carm[c]=gi;
+  
+}
+function fail(t){S.msg={ok:false,t};render()}
+
+function render(){
+  const lk=locked(),ratioTotal=sumR(),vb=validBlocks();
+  const fOpts=f=>f.levels.map(l=>`<option>${esc(l)}</option>`).join('');
+  $('#app').innerHTML=`
+  ${S.method!=='cluster'?`<section><h2>Stratification factors</h2><p class="mute">Each combination of levels is its own stratum with its own block sequence.${lk?' Locked once participants are randomised.':''}</p>
+    <div class="row"><input type="text" id="fname" placeholder="Factor name (e.g. Sex)" ${lk?'disabled':''}><input type="text" id="flv" placeholder="Levels, comma separated (e.g. Male, Female)" ${lk?'disabled':''}><button id="addF" ${lk?'disabled':''}>Add factor</button></div>
+    ${S.factors.length?S.factors.map((f,i)=>`<div class="tag"><b>${esc(f.name)}</b>: ${f.levels.map(esc).join(', ')}${lk?'':`<button data-rmf="${i}" aria-label="Remove ${esc(f.name)}">✕</button>`}</div>`).join(''):'<p class="mute">No factors yet. Without factors, all participants share one stratum.</p>'}
+    ${S.factors.length?`<p class="mute">${S.factors.reduce((a,f)=>a*f.levels.length,1)} strata</p>`:''}
+  </section>`:''}
+  ${S.method==='cluster'?`<section><h2>Clusters</h2><p class="mute">Arms are assigned to clusters. Every participant in a cluster gets that cluster's arm.${S.clusters.length?' Clusters are randomised in the order they are drawn, using the block sizes below if set, otherwise simple randomisation.':''}</p>
+    <div class="row"><input type="text" id="cname" placeholder="New cluster name (e.g. Site 1)"><button id="addC">Add cluster</button><button class="p" id="randC" ${S.clusters.some(c=>S.carm[c]===undefined)?'':'disabled'}>Randomise clusters</button></div>
+    ${S.clusters.length?S.clusters.map((c,i)=>{const g=S.carm[c];const n=S.assigned.filter(a=>a.stratum===c).length;return `<span class="tag"><b>${esc(c)}</b>${g!==undefined?`<span style="color:${gcol(g)}">${esc(label(g))}</span>`:'<span class="mute">not assigned</span>'}${n?`<span class="mute">${n} participant${n>1?'s':''}</span>`:''}${g===undefined?`<button data-rmc="${i}" aria-label="Remove ${esc(c)}">✕</button>`:''}</span>`}).join(''):'<p class="mute">No clusters defined. Add at least one cluster before randomising.</p>'}
+  </section>`:''}
+  <section><h2>Randomisation seed</h2><p class="mute">The same seed and settings reproduce every allocation. Changing the seed starts a new random stream and keeps existing assignments.</p>
+    <div class="row"><input type="text" id="seed" value="${esc(S.seed)}" style="font-family:ui-monospace,monospace"><button class="p" id="applySeed">Apply</button><button id="newSeed">New seed</button></div>
+    
+  </section>
+  <section><h2>Method</h2><div class="mgrid">
+    <label class="mcard"><input type="radio" name="method" value="simple" ${S.method==='simple'?'checked':''} ${lk?'disabled':''}> Simple randomisation <span class="mute">Like a coin toss for each person. Group sizes may end up uneven.</span></label>
+    <label class="mcard"><input type="radio" name="method" value="block" ${S.method==='block'?'checked':''} ${lk?'disabled':''}> Permuted blocks <span class="mute">Keeps group sizes even as people join.</span></label>
+    <label class="mcard"><input type="radio" name="method" value="cluster" ${S.method==='cluster'?'checked':''} ${lk?'disabled':''}> Cluster randomisation <span class="mute">Whole sites or schools get one group, and everyone there shares it.</span></label></div>
+  </section>
+  <section><h2>Groups</h2>
+    <div class="row"><input type="text" id="gname" placeholder="New group name" ${lk?'disabled':''}><button id="addG" ${lk?'disabled':''}>Add group</button></div>
+    ${S.groups.map((g,i)=>`<div class="row"><input type="text" data-gn="${i}" value="${esc(g.name)}" ${lk?'disabled':''}><span class="mute">Ratio</span><input type="number" min="1" max="20" data-gr="${i}" value="${g.ratio}" ${lk?'disabled':''}>${!lk&&S.groups.length>2?`<button data-rmg="${i}" aria-label="Remove group">✕</button>`:''}</div>`).join('')}
+  </section>
+  <section><h2>Blinding</h2>
+    <label><input type="checkbox" id="blind" ${S.blinding?'checked':''}> Show anonymous group labels (Group A, B…)</label>
+    ${S.blinding?`<div class="row"><button id="unb">${S.unblind?'Re-blind':'Unblind view'}</button></div>`:''}
+  </section>
+  ${S.method!=='simple'?`<section><h2>Block sizes <span class="tag" style="color:${S.method==='block'?'var(--badt)':'var(--okt)'}">${S.method==='block'?'Mandatory':'Optional'}</span></h2>
+    <p class="mute">Each size must be a multiple of ${ratioTotal} (the ratio total). When several are set, one is chosen at random per block, which keeps the next assignment hard to guess.</p>
+    <div class="row"><input type="number" id="bs" min="2" value="${ratioTotal*2}" ${lk?'disabled':''}><button id="addB" ${lk?'disabled':''}>Add</button></div>
+    <div>${S.blocks.map((b,i)=>`<span class="tag" style="${b%ratioTotal?'border-color:var(--badt);color:var(--badt)':''}">${b}${lk?'':`<button data-rmb="${i}" aria-label="Remove">✕</button>`}</span>`).join('')}</div>
+    ${vb.length?'':S.method==='cluster'?'<div class="note">No valid block size, so clusters use simple randomisation.</div>':'<div class="note bad">No valid block size. Add a multiple of '+ratioTotal+'.</div>'}
+  </section>`:''}
+  <section><h2>Add participants</h2>
+    <div class="tw"><table><thead><tr><th>ID</th>${S.method==='cluster'?'<th>Cluster</th>':S.factors.map(f=>`<th>${esc(f.name)}</th>`).join('')}<th></th></tr></thead><tbody>
+    ${S.rows.map((r,i)=>`<tr><td><input type="text" data-rid="${i}" value="${esc(r.id)}" placeholder="Participant ID"></td>${S.method==='cluster'?CLTD(r,i):S.factors.map(f=>`<td><select data-rl="${i}|${esc(f.name)}"><option value="">Select</option>${f.levels.map(l=>`<option ${r.lv[f.name]===l?'selected':''}>${esc(l)}</option>`).join('')}</select></td>`).join('')}<td><button data-rmr="${i}" aria-label="Remove row">✕</button></td></tr>`).join('')}
+    </tbody></table></div>
+    <textarea id="bulk" style="height:64px" placeholder="Paste IDs: separate with commas, semicolons or new lines"></textarea>
+    <div class="row">${S.method==='cluster'?CLSEL():''}<button id="bulkAdd">Add IDs to list</button><button id="impB">Import file</button><input type="file" id="imp" accept=".csv,.txt,text/plain,text/csv" hidden><span class="mute">Imports the first column of a CSV or text file.</span></div>
+    <div class="row" style="justify-content:space-between"><button id="addR">Add row</button><button class="p" id="go">Randomise</button></div>
+    ${S.msg?`<div class="note ${S.msg.ok?'ok':'bad'}" role="status">${esc(S.msg.t)}</div>`:''}
+  </section>
+  <section><div class="hd"><h2>Assigned participants (${S.assigned.length})</h2><button id="exp">Export</button></div>
+    ${S.assigned.length?`<div class="bar">${S.groups.map((g,i)=>{const n=S.assigned.filter(a=>a.group===i).length;return n?`<span style="flex:${n};background:${gcol(i)}" title="${esc(label(i))}: ${n}"></span>`:''}).join('')}</div>`:''}
+    <div class="grid">${S.groups.map((g,gi)=>{const m=S.assigned.filter(a=>a.group===gi);return `<div class="col"><b style="color:${gcol(gi)}">${esc(label(gi))}</b> <span class="mute">${m.length}</span><div>${m.length?m.map(a=>`<span class="chip" style="border-left:3px solid ${gcol(gi)}" title="${esc(a.stratum)}">${esc(a.id)}</span>`).join(''):'<p class="empty">No participants in this group</p>'}</div></div>`}).join('')}</div>
+    ${S.assigned.length&&(S.factors.length||S.method==='cluster')?`<h2 style="margin-top:18px">Balance by stratum</h2><div class="tw"><table><thead><tr><th>Stratum</th>${S.groups.map((g,i)=>`<th>${esc(label(i))}</th>`).join('')}</tr></thead><tbody>${[...new Set(S.assigned.map(a=>a.stratum))].map(k=>`<tr><td>${esc(k)}</td>${S.groups.map((g,i)=>`<td>${S.assigned.filter(a=>a.stratum===k&&a.group===i).length}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:''}
+    ${S.exp?`<h2 style="margin-top:18px">Allocation CSV</h2><textarea readonly id="t1">${esc(S.exp.csv)}</textarea><div class="row"><button data-cp="t1">Copy CSV</button></div>`:''}
+  </section>`;
+}
+
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('button');if(!t)return;const d=t.dataset;
+  if(t.id==='addF'){const n=$('#fname').value.trim(),l=[...new Set($('#flv').value.split(',').map(x=>x.trim()).filter(Boolean))];
+    if(!n||l.length<2)return fail('A factor needs a name and at least two levels.');
+    if(S.factors.some(f=>f.name===n))return fail('That factor already exists.');
+    S.factors.push({name:n,levels:l});S.msg=null}
+  else if(d.rmf!==undefined)S.factors.splice(+d.rmf,1);
+  else if(t.id==='applySeed'){const v=$('#seed').value.trim();if(v&&v!==S.seed){S.seed=v;S.strata={};}}
+  else if(t.id==='newSeed'){S.seed=newSeed();S.strata={};}
+  else if(t.id==='addG'){const n=$('#gname').value.trim();if(n)S.groups.push({name:n,ratio:1})}
+  else if(d.rmg!==undefined)S.groups.splice(+d.rmg,1);
+  else if(t.id==='addB'){const v=parseInt($('#bs').value);if(v>0&&!S.blocks.includes(v))S.blocks.push(v);S.blocks.sort((a,b)=>a-b)}
+  else if(d.rmb!==undefined)S.blocks.splice(+d.rmb,1);
+  else if(t.id==='unb')S.unblind=!S.unblind;
+  else if(t.id==='addR')S.rows.push({id:'',lv:{}});
+  else if(d.rmr!==undefined){S.rows.splice(+d.rmr,1);if(!S.rows.length)S.rows=[{id:'',lv:{}}]}
+  else if(t.id==='addC'){const n=$('#cname').value.split(/[,;\n]+/).map(x=>x.trim()).filter(x=>x&&!S.clusters.includes(x));S.clusters.push(...new Set(n))}
+  else if(d.rmc!==undefined)S.clusters.splice(+d.rmc,1);
+  else if(t.id==='randC'){for(const c of S.clusters)if(S.carm[c]===undefined)await drawCluster(c);S.msg=null}
+  else if(t.id==='bulkAdd')addIds($('#bulk').value.split(/[,;\n\r]+/));
+  else if(t.id==='impB'){$('#imp').click();return}
+  else if(t.id==='go')return randomize();
+  else if(t.id==='exp'){
+    const csv=['id,group,stratum,block,block_size,seed'].concat(S.assigned.map(a=>[a.id,S.groups[a.group].name,a.stratum,a.block??'',a.blockSize??'',a.seed??''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','))).join('\n');
+    S.exp={csv}}
+  else if(d.cp){const el=document.getElementById(d.cp);el.select();try{await navigator.clipboard.writeText(el.value);t.textContent='Copied'}catch(x){document.execCommand&&document.execCommand('copy');t.textContent='Copied'}return}
+  else return;
+  save();render();
+});
+document.addEventListener('input',e=>{
+  const t=e.target,d=t.dataset;
+  if(d.rid!==undefined)S.rows[+d.rid].id=t.value;
+  else if(d.gn!==undefined)S.groups[+d.gn].name=t.value;
+  else if(d.gr!==undefined)S.groups[+d.gr].ratio=Math.max(1,parseInt(t.value)||1);
+  save();
+});
+document.addEventListener('change',e=>{
+  const t=e.target,d=t.dataset;
+  if(d.rl){const[i,f]=d.rl.split('|');S.rows[+i].lv[f]=t.value}
+  else if(d.gr!==undefined)render();
+  else if(t.name==='method'){if(!locked())S.method=t.value;render()}
+  else if(t.id==='imp'){const f=t.files[0];if(f){f.text().then(x=>{let ids=x.split(/\r?\n/).map(l=>l.split(/[,;\t]/)[0]);if(/^"?id"?$/i.test((ids[0]||'').trim()))ids.shift();addIds(ids)})}}
+  else if(t.id==='blind'){S.blinding=t.checked;S.unblind=false;render()}
+  save();
+});
+$('#reset').onclick=()=>{if(confirm('Clear all participants, settings and assignments?')){S=fresh();save();render()}};
+render();
+</script>
+</body>
+</html>
